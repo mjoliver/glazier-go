@@ -9,7 +9,10 @@ The root configuration file is a YAML list. Each item in the list is a map conta
 ```yaml
 # Example Configuration
 - policy:
-  - os_version
+  - os_version:
+      version: "11"
+  - device_model:
+      allowed: ["Nitro", "ThinkPad"]
 
 - action_name:
     param1: value
@@ -20,15 +23,19 @@ The root configuration file is a YAML list. Each item in the list is a map conta
 
 1.  **Sequential Execution**: Tasks are executed in the order they appear in the file.
 2.  **Failure handling**: If an action fails (returns an error), execution **stops** immediately (unless specific error handling is implemented in the future).
-3.  **Policy Checks**: Policies act as gates. If a policy check fails, the execution stops.
+3.  **Policy Checks**: Policies act as gates. If a policy check fails, the execution stops. Version checks are **exact match** — a config locked to `"Server 2019"` will not run on a `"Server 2022"` host.
 
 ## Example
 
 ```yaml
 # 1. Check if we are compliant
 - policy:
-    - os_version
-    - device_model
+    - os_version:
+        version: "11"
+    - device_model:
+        allowed: ["Nitro"]
+    - chassis_type:
+        allowed: ["laptop", "desktop"]
 
 # 2. Set Build Stage
 - stage.set: "10"

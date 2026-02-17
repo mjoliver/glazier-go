@@ -7,7 +7,13 @@
 #   .\glazier.exe -config_root_path .\examples\full.yaml
 
 controls:
-  - policy: ["os_version", "device_model"]
+  - policy:
+    - os_version:
+        version: "11"
+    - device_model:
+        allowed: ["Nitro"]
+    - chassis_type:
+        allowed: ["laptop", "desktop"]
 
 tasks:
   # 1. Prepare Storage & Encryption

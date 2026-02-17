@@ -5,9 +5,10 @@
 #   set IMAGE_ID=win11-v2
 #   .\glazier.exe -config_root_path .\examples\basic.yaml
 
-# Policy: Only run on Windows
+# Policy: Only run on Windows 11
 - policy:
-  - os_version
+  - os_version:
+      version: "11"
 
 # Set the build stage
 - stage.set: "10"
