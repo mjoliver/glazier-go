@@ -8,8 +8,10 @@ go 1.25.3
 replace github.com/google/glazier => ./third_party/glazier
 
 require (
+	github.com/StackExchange/wmi v1.2.1
 	github.com/capnspacehook/taskmaster v0.0.0-20210519235353-1629df7c85e9
 	github.com/google/glazier v0.0.0-20221201205010-c6e59b1b4ae6
+	golang.org/x/sys v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -24,6 +26,5 @@ require (
 	github.com/rickb777/date v1.21.1 // indirect
 	github.com/rickb777/plural v1.4.4 // indirect
 	github.com/scjalliance/comshim v0.0.0-20251021001035-b69f3cdad6f3 // indirect
-	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/toast.v1 v1.0.0-20180812000517-0a84660828b2 // indirect
 )

@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"runtime"
 	"testing"
 )
 
@@ -10,125 +11,137 @@ func TestOSVersionPolicy_Check(t *testing.T) {
 		policy  OSVersionPolicy
 		wantErr bool
 	}{
-		{
-			name:    "empty OS - should pass (no check)",
-			policy:  OSVersionPolicy{OS: "", MinVersion: "10.0"},
-			wantErr: false,
-		},
-		{
-			name:    "windows OS on windows",
-			policy:  OSVersionPolicy{OS: "windows", MinVersion: "10.0"},
-			wantErr: false, // Will pass if running on Windows
-		},
-		{
-			name:    "linux OS on windows",
-			policy:  OSVersionPolicy{OS: "linux", MinVersion: "5.0"},
-			wantErr: true, // Will fail if running on Windows
-		},
+		{"no constraints - passes", OSVersionPolicy{}, false},
+		{"correct OS", OSVersionPolicy{OS: runtime.GOOS}, false},
+		{"wrong OS", OSVersionPolicy{OS: "fakeos"}, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.policy.Check()
-
-			if tt.wantErr && err == nil {
-				t.Errorf("OSVersionPolicy.Check() expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("OSVersionPolicy.Check() unexpected error = %v", err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
+}
+
+func TestOSVersionPolicy_ExactVersionMatch(t *testing.T) {
+	current := currentWindowsVersion()
+	t.Logf("Current version: %q", current)
+
+	// Should pass with current version in list
+	p := &OSVersionPolicy{AllowedVersions: []string{current}}
+	if err := p.Check(); err != nil {
+		t.Errorf("should pass with matching version, got: %v", err)
+	}
+
+	// Should pass with current version among many
+	p = &OSVersionPolicy{AllowedVersions: []string{"99", current, "98"}}
+	if err := p.Check(); err != nil {
+		t.Errorf("should pass when current is in list, got: %v", err)
+	}
+
+	// Should fail with non-matching version
+	p = &OSVersionPolicy{AllowedVersions: []string{"NonExistentVersion"}}
+	if err := p.Check(); err == nil {
+		t.Error("should fail with non-matching version")
+	}
+}
+
+func TestOSVersionPolicy_ServerVersions(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows-only test")
+	}
+
+	current := currentWindowsVersion()
+	t.Logf("Detected Windows version: %q", current)
+
+	// Verify that a Server 2019 policy does NOT match a Windows 11 host
+	if current == "11" {
+		p := &OSVersionPolicy{AllowedVersions: []string{"Server 2019"}}
+		if err := p.Check(); err == nil {
+			t.Error("Windows 11 should NOT match Server 2019 policy")
+		}
+	}
+
+	// Verify that a Windows 10 policy does NOT match a Windows 11 host
+	if current == "11" {
+		p := &OSVersionPolicy{AllowedVersions: []string{"10"}}
+		if err := p.Check(); err == nil {
+			t.Error("Windows 11 should NOT match Windows 10 policy")
+		}
+	}
+}
+
+func TestWindowsVersion(t *testing.T) {
+	ver := WindowsVersion()
+	t.Logf("WindowsVersion(): %s", ver)
 }
 
 func TestDeviceModelPolicy_Check(t *testing.T) {
-	tests := []struct {
-		name    string
-		policy  DeviceModelPolicy
-		wantErr bool
-	}{
-		{
-			name:    "empty allowed models",
-			policy:  DeviceModelPolicy{AllowedModels: []string{}},
-			wantErr: false, // Currently a no-op
-		},
-		{
-			name:    "with allowed models",
-			policy:  DeviceModelPolicy{AllowedModels: []string{"ThinkPad", "Latitude"}},
-			wantErr: false, // Currently a no-op (needs go/device)
-		},
+	p := &DeviceModelPolicy{}
+	if err := p.Check(); err != nil {
+		t.Errorf("empty list should pass, got: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.policy.Check()
+	model := getDeviceModel()
+	t.Logf("Detected model: %q", model)
 
-			if tt.wantErr && err == nil {
-				t.Errorf("DeviceModelPolicy.Check() expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("DeviceModelPolicy.Check() unexpected error = %v", err)
-			}
-		})
+	if model != "" {
+		p = &DeviceModelPolicy{AllowedModels: []string{model}}
+		if err := p.Check(); err != nil {
+			t.Errorf("matching model should pass, got: %v", err)
+		}
+
+		p = &DeviceModelPolicy{AllowedModels: []string{"NonExistent12345"}}
+		if err := p.Check(); err == nil {
+			t.Error("non-matching model should fail")
+		}
 	}
 }
 
-func TestNewPolicy(t *testing.T) {
-	tests := []struct {
-		name       string
-		policyName string
-		config     interface{}
-		wantErr    bool
-		wantType   string
-	}{
-		{
-			name:       "os_version policy",
-			policyName: "os_version",
-			config:     nil,
-			wantErr:    false,
-			wantType:   "*policy.OSVersionPolicy",
-		},
-		{
-			name:       "device_model policy",
-			policyName: "device_model",
-			config:     nil,
-			wantErr:    false,
-			wantType:   "*policy.DeviceModelPolicy",
-		},
-		{
-			name:       "chassis_type policy",
-			policyName: "chassis_type",
-			config:     nil,
-			wantErr:    false,
-			wantType:   "*policy.ChassisTypePolicy",
-		},
-		{
-			name:       "unknown policy",
-			policyName: "unknown_policy",
-			config:     nil,
-			wantErr:    true,
-		},
+func TestChassisTypePolicy_Check(t *testing.T) {
+	p := &ChassisTypePolicy{}
+	if err := p.Check(); err != nil {
+		t.Errorf("empty list should pass, got: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p, err := NewPolicy(tt.policyName, tt.config)
+	chassis := getChassisType()
+	t.Logf("Detected chassis: %q", chassis)
 
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("NewPolicy() expected error, got nil")
-				}
-				return
-			}
+	if chassis != "" {
+		p = &ChassisTypePolicy{AllowedTypes: []string{chassis}}
+		if err := p.Check(); err != nil {
+			t.Errorf("matching chassis should pass, got: %v", err)
+		}
+	}
+}
 
-			if err != nil {
-				t.Errorf("NewPolicy() unexpected error = %v", err)
-				return
-			}
+func TestNewPolicy_WithConfig(t *testing.T) {
+	// Single version
+	p, err := NewPolicy("os_version", map[string]interface{}{
+		"os":      runtime.GOOS,
+		"version": currentWindowsVersion(),
+	})
+	if err != nil {
+		t.Fatalf("NewPolicy() error = %v", err)
+	}
+	if err := p.Check(); err != nil {
+		t.Errorf("should pass, got: %v", err)
+	}
 
-			if p == nil {
-				t.Error("NewPolicy() returned nil policy")
-			}
-		})
+	// Multiple versions
+	p, err = NewPolicy("os_version", map[string]interface{}{
+		"allowed_versions": []interface{}{"10", "11", "Server 2022"},
+	})
+	if err != nil {
+		t.Fatalf("NewPolicy() error = %v", err)
+	}
+
+	// Unknown policy
+	_, err = NewPolicy("unknown", nil)
+	if err == nil {
+		t.Error("should fail for unknown policy")
 	}
 }
