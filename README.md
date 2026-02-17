@@ -31,6 +31,7 @@ The original Glazier is a powerful imaging tool written in Python. While robust,
     - Structured **Logging** (Google Deck) with **Windows Event Log** integration (graceful WinPE fallback).
 - **Configuration**:
     - YAML-based config engine.
+    - **Modular Configs**: Split large configs using `include`.
     - **Templates** for dynamic variable substitution.
     - **Policy** validation (OS version, Device Model).
 
@@ -80,7 +81,6 @@ Glazier expects a configuration root. By default, it looks for `config.yaml` or 
 ## 🔮 Roadmap
 
 - [ ] **WinPE Integration**: Tooling to easily build bootable ISOs.
-- [ ] **Config Modularity**: `include` directive for splitting large configs.
 - [ ] **Disk Wipe**: `disk.wipe` action for clean installs.
 - [ ] **UI Layer**: Optional simple UI for user prompts during imaging.
 

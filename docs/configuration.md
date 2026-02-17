@@ -19,6 +19,25 @@ The root configuration file is a YAML list. Each item in the list is a map conta
     param2: value
 ```
 
+## Modular Configs (Includes)
+
+You can split your configuration into multiple files using the `include` directive. Included files are fetched and their tasks are executed **before** the tasks in the main file.
+
+```yaml
+include:
+  - partitions.yaml
+  - software_base.yaml
+
+tasks:
+  - system.reboot:
+```
+
+### Path Resolution
+- **Relative Paths**: Resolved relative to the including file's location.
+    - If `main.yaml` is at `http://example.com/main.yaml` and includes `sub.yaml`, it fetches `http://example.com/sub.yaml`.
+- **Absolute Paths**: Used as-is (e.g. `C:\Configs\base.yaml`).
+- **URLs**: You can mix local and remote includes.
+
 ## Control Flow
 
 1.  **Sequential Execution**: Tasks are executed in the order they appear in the file.
@@ -63,6 +82,7 @@ Config files support Go `text/template` syntax for dynamic values. See [Template
     packages:
       - base-{{.Hostname}}
       - image-{{.ImageID}}
+```
 
 ## Error Handling & Retries
 
@@ -83,4 +103,3 @@ Behavior when an action fails (after all retries).
     retries: 3           # Retry up to 3 times (total 4 attempts)
     on_error: continue   # If it still fails, log warning and continue
 ```
-

@@ -3,6 +3,9 @@ package config
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/deck"
@@ -11,6 +14,40 @@ import (
 	"github.com/mjoliver/glazier-go/internal/actions"
 	"github.com/mjoliver/glazier-go/internal/policy"
 )
+
+// Config represents the schema of a configuration file.
+type Config struct {
+	Includes []string                 `yaml:"include"`
+	Tasks    []map[string]interface{} `yaml:"tasks"`
+	// Backwards compatibility: if the root is just a list, we handle that during unmarshal?
+	// Actually, YAML v3 might struggle if we unmarshal a list into a struct.
+	// We might need a custom UnmarshalYAML or try to unmarshal into []map first, then struct.
+	// But to keep it clean, let's assume the NEW format is strict: root object with `tasks` list.
+	// For backwards compat with the existing list-only format, we can try to detect or just support both.
+	// Let's stick to the Plan: we add `include` which implies a change to struct-based config if used.
+	// Wait, the existing config is a LIST of maps.
+	// If we change to a STRUCT, old configs break.
+	// Solution: Attempt to unmarshal as Config struct. If that implies empty tasks and includes, try unmarshalling as TaskList.
+}
+
+// ConfigFile is a helper to parse potential formats.
+func parseConfigData(data []byte) (*Config, error) {
+	// Try Unmarshalling as the new Struct format
+	var c Config
+	err := yaml.Unmarshal(data, &c)
+	if err == nil && (len(c.Tasks) > 0 || len(c.Includes) > 0) {
+		return &c, nil
+	}
+
+	// Fallback: Try Unmarshalling as the old List format
+	var t TaskList
+	if err := yaml.Unmarshal(data, &t); err == nil {
+		// If it's a list, treat it as just tasks
+		return &Config{Tasks: t}, nil
+	}
+
+	return nil, fmt.Errorf("failed to parse config as either struct or list")
+}
 
 // TaskList represents the top-level YAML structure of a Glazier config.
 // It is a list of map items, where each item is either a "policy" check or an action.
@@ -31,14 +68,11 @@ func NewRunner(f FetcherInterface) *Runner {
 
 // Start executes the task list processing, starting from the given config path.
 func (r *Runner) Start(ctx context.Context, configURL string) error {
-	data, err := r.fetcher.Fetch(ctx, configURL)
+	tasks, err := r.parseConfigRecursive(ctx, configURL, make(map[string]bool))
 	if err != nil {
-		return fmt.Errorf("failed to fetch initial config: %w", err)
+		return err
 	}
-
-	if err := yaml.Unmarshal(data, &r.tasks); err != nil {
-		return fmt.Errorf("failed to parse task list: %w", err)
-	}
+	r.tasks = tasks
 
 	for i, task := range r.tasks {
 		deck.Infof("Executing task %d/%d", i+1, len(r.tasks))
@@ -174,4 +208,71 @@ func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error 
 	}
 
 	return nil
+}
+
+// parseConfigRecursive fetches and parses a config file, handling includes recursively.
+// visited tracks URLs to prevent cycles.
+func (r *Runner) parseConfigRecursive(ctx context.Context, url string, visited map[string]bool) (TaskList, error) {
+	if visited[url] {
+		return nil, fmt.Errorf("circular dependency detected: %s", url)
+	}
+	visited[url] = true
+
+	deck.Infof("Fetching config: %s", url)
+	data, err := r.fetcher.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("fetch failed for %s: %w", url, err)
+	}
+
+	cfg, err := parseConfigData(data)
+	if err != nil {
+		return nil, fmt.Errorf("parse failed for %s: %w", url, err)
+	}
+
+	var allTasks TaskList
+
+	// Process includes first (prepend logic? or just standard flattening order)
+	// Usually includes are prepended or essentially "expanded in place".
+	// But since `include` is a sibling of `tasks` in our struct, it's ambiguous where they go relative to `tasks`.
+	// A common pattern is: Includes get processed, then local tasks.
+	for _, inc := range cfg.Includes {
+		absPath, err := resolvePath(url, inc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve path %s relative to %s: %w", inc, url, err)
+		}
+		subTasks, err := r.parseConfigRecursive(ctx, absPath, visited)
+		if err != nil {
+			return nil, err
+		}
+		allTasks = append(allTasks, subTasks...)
+	}
+
+	allTasks = append(allTasks, cfg.Tasks...)
+	return allTasks, nil
+}
+
+// resolvePath resolves a target path relative to a base path.
+// Handles both HTTP URLs and local file paths.
+func resolvePath(base, target string) (string, error) {
+	// If target is absolute, return it
+	if strings.HasPrefix(target, "http") || filepath.IsAbs(target) {
+		return target, nil
+	}
+
+	// If base is HTTP
+	if strings.HasPrefix(base, "http") {
+		u, err := url.Parse(base)
+		if err != nil {
+			return "", err
+		}
+		rel, err := url.Parse(target)
+		if err != nil {
+			return "", err
+		}
+		return u.ResolveReference(rel).String(), nil
+	}
+
+	// Base is local filesystem
+	baseDir := filepath.Dir(base)
+	return filepath.Join(baseDir, target), nil
 }
