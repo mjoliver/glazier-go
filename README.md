@@ -81,7 +81,7 @@ Glazier expects a configuration root. By default, it looks for `config.yaml` or 
 ## 🔮 Roadmap
 
 
-- [x] **Disk Wipe**: `disk.wipe` action for clean installs.
+
 - [ ] **UI Layer**: Optional simple UI for user prompts during imaging.
 
 ## 📄 License
