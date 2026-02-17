@@ -22,5 +22,8 @@ jobs:
     - name: Build
       run: go build -v ./cmd/glazier
 
-    - name: Test
+    - name: Unit Tests
       run: go test -v ./internal/...
+
+    - name: Integration Test
+      run: go test -v ./test/integration/...

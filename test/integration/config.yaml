@@ -1,0 +1,23 @@
+# Integration Test Config
+# This config is used by CI to verify end-to-end execution.
+# It performs safe, reversible operations on the Windows runner.
+
+# 1. Create a test directory
+- file.mkdir: C:\GlazierTest\integration
+
+# 2. Set registry values
+- registry.set:
+    path: SOFTWARE\GlazierTest
+    name: BuildVersion
+    value: "1.0.0-ci"
+
+- registry.set:
+    path: SOFTWARE\GlazierTest
+    name: BuildStage
+    value: 42
+    type: dword
+
+# 3. Write a test file
+- file.download:
+    url: https://httpbin.org/robots.txt
+    dst: C:\GlazierTest\integration\downloaded.txt
