@@ -27,3 +27,12 @@ jobs:
 
     - name: Integration Test
       run: go test -v ./test/integration/...
+
+    - name: Verify Policy PASS (Server 2022)
+      run: .\glazier.exe -config_root_path test\ci\policy_pass.yaml
+
+    - name: Verify Policy FAIL (Server 2019)
+      run: |
+        .\glazier.exe -config_root_path test\ci\policy_fail.yaml
+        if ($LASTEXITCODE -eq 0) { exit 1 } else { exit 0 }
+

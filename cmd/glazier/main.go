@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/google/deck"
@@ -16,6 +17,7 @@ var (
 	ntpServer      = flag.String("ntp_server", "time.google.com", "NTP server to use for time synchronization")
 	preserveTasks  = flag.Bool("preserve_tasks", false, "Preserve the local task list on startup")
 	verifyUrls     = flag.String("verify_urls", "", "Comma-separated list of URLs to verify reachability")
+	validate       = flag.Bool("validate", false, "Validate the configuration without executing (dry-run)")
 )
 
 func main() {
@@ -25,7 +27,11 @@ func main() {
 	deck.Add(logger.Init(os.Stdout, 0))
 	defer deck.Close()
 
-	deck.Info("Starting Glazier Go...")
+	if *validate {
+		deck.Info("Running in VALIDATION mode")
+	} else {
+		deck.Info("Starting Glazier Go...")
+	}
 
 	// Todo: Initialize BuildInfo
 	// Todo: Check WinPE status
@@ -54,6 +60,19 @@ func run(ctx context.Context) error {
 	// Create Config Runner
 	fetcher := config.NewFetcher(buildInfo)
 	runner := config.NewRunner(fetcher)
+
+	// Load Config
+	if *validate {
+		tasks, err := runner.LoadConfig(ctx, *configRootPath)
+		if err != nil {
+			return fmt.Errorf("config load failed: %w", err)
+		}
+		if err := config.Validate(ctx, tasks); err != nil {
+			return err
+		}
+		deck.Info("Validation successful!")
+		return nil
+	}
 
 	// Execute
 	return runner.Start(ctx, *configRootPath)

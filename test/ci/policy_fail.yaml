@@ -1,0 +1,6 @@
+# Should FAIL on Server 2022
+- policy:
+    - os_version:
+        allowed_versions: ["Server 2019"]
+
+- stage.set: 1

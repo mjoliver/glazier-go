@@ -28,7 +28,7 @@ func (p *OSVersionPolicy) Check() error {
 
 	// Check version if specified
 	if len(p.AllowedVersions) > 0 {
-		current := currentWindowsVersion()
+		current := getCurrentWindowsVersion()
 
 		for _, allowed := range p.AllowedVersions {
 			if strings.EqualFold(current, allowed) {
@@ -45,7 +45,10 @@ func (p *OSVersionPolicy) Check() error {
 // currentWindowsVersion returns the user-facing Windows version string.
 // On Windows: "11", "10", "Server 2022", "Server 2019", etc.
 // On other OS: runtime.GOOS
-func currentWindowsVersion() string {
+// getCurrentWindowsVersion returns the user-facing Windows version string.
+// On Windows: "11", "10", "Server 2022", "Server 2019", etc.
+// On other OS: runtime.GOOS
+var getCurrentWindowsVersion = func() string {
 	if runtime.GOOS != "windows" {
 		return runtime.GOOS
 	}

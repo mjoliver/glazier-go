@@ -1,4 +1,13 @@
-# Configuration Structure
+# Configuration
+## Config Validator
+
+You can validate a configuration file without executing it using the `-validate` flag. This is useful for CI/CD pipelines or pre-flight checks.
+
+```powershell
+.\glazier.exe -validate -config_root_path examples\basic.yaml
+```
+
+## Structure
 
 Glazier uses a YAML-based configuration system. The configuration is a **list of tasks** executed sequentially.
 

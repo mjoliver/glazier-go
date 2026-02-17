@@ -68,7 +68,7 @@ func NewRunner(f FetcherInterface) *Runner {
 
 // Start executes the task list processing, starting from the given config path.
 func (r *Runner) Start(ctx context.Context, configURL string) error {
-	tasks, err := r.parseConfigRecursive(ctx, configURL, make(map[string]bool))
+	tasks, err := r.LoadConfig(ctx, configURL)
 	if err != nil {
 		return err
 	}
@@ -210,9 +210,15 @@ func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error 
 	return nil
 }
 
-// parseConfigRecursive fetches and parses a config file, handling includes recursively.
+// LoadConfig recursively fetches and parses a config file, handling includes recursively.
+// It returns the flattened list of tasks without executing them.
+func (r *Runner) LoadConfig(ctx context.Context, url string) (TaskList, error) {
+	return r.loadConfigRecursive(ctx, url, make(map[string]bool))
+}
+
+// loadConfigRecursive fetches and parses a config file, handling includes recursively.
 // visited tracks URLs to prevent cycles.
-func (r *Runner) parseConfigRecursive(ctx context.Context, url string, visited map[string]bool) (TaskList, error) {
+func (r *Runner) loadConfigRecursive(ctx context.Context, url string, visited map[string]bool) (TaskList, error) {
 	if visited[url] {
 		return nil, fmt.Errorf("circular dependency detected: %s", url)
 	}
@@ -240,7 +246,7 @@ func (r *Runner) parseConfigRecursive(ctx context.Context, url string, visited m
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve path %s relative to %s: %w", inc, url, err)
 		}
-		subTasks, err := r.parseConfigRecursive(ctx, absPath, visited)
+		subTasks, err := r.loadConfigRecursive(ctx, absPath, visited)
 		if err != nil {
 			return nil, err
 		}

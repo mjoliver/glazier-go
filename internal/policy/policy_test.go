@@ -27,7 +27,7 @@ func TestOSVersionPolicy_Check(t *testing.T) {
 }
 
 func TestOSVersionPolicy_ExactVersionMatch(t *testing.T) {
-	current := currentWindowsVersion()
+	current := getCurrentWindowsVersion()
 	t.Logf("Current version: %q", current)
 
 	// Should pass with current version in list
@@ -54,7 +54,7 @@ func TestOSVersionPolicy_ServerVersions(t *testing.T) {
 		t.Skip("Windows-only test")
 	}
 
-	current := currentWindowsVersion()
+	current := getCurrentWindowsVersion()
 	t.Logf("Detected Windows version: %q", current)
 
 	// Verify that a Server 2019 policy does NOT match a Windows 11 host
@@ -122,7 +122,7 @@ func TestNewPolicy_WithConfig(t *testing.T) {
 	// Single version
 	p, err := NewPolicy("os_version", map[string]interface{}{
 		"os":      runtime.GOOS,
-		"version": currentWindowsVersion(),
+		"version": getCurrentWindowsVersion(),
 	})
 	if err != nil {
 		t.Fatalf("NewPolicy() error = %v", err)
