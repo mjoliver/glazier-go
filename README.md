@@ -47,9 +47,7 @@ We employ a **Plugin-style Architecture** to separate the "Business Logic" from 
     - A dynamic registry where actions like `bitlocker.enable` or `domain.join` are registered.
     - Ensures new capabilities can be added without modifying the core engine.
 
-3.  **Legacy Wrappers (`go/`)**:
-    - We leverage the battle-tested low-level libraries from the original Google repo (e.g., `go/bitlocker`, `go/power`) now located in `third_party/glazier`.
-    - Our `internal/actions` wrappers adapt these APIs to a unified `Action` interface.
+
 
 ## 🚀 Getting Started
 
