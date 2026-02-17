@@ -83,4 +83,4 @@ Behavior when an action fails (after all retries).
     retries: 3           # Retry up to 3 times (total 4 attempts)
     on_error: continue   # If it still fails, log warning and continue
 ```
-```
+
