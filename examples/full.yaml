@@ -1,0 +1,43 @@
+# Full Imaging Workflow Example
+# Run with: .\glazier.exe -config_root_path .
+
+controls:
+  - policy: ["os_version", "device_model"]
+
+tasks:
+  # 1. Prepare Storage & Encryption
+  - stage.set: "10"
+  - bitlocker.enable:
+      mode: tpm
+      backup: true
+
+  # 2. Install Core Software
+  - stage.set: "50"
+  - googet.install:
+      packages:
+        - google-chrome-stable
+        - vlc-media-player
+        - 7zip
+      reinstall: true
+      db_only: false
+
+  # 3. Join Domain
+  - domain.join:
+      domain: "example.com"
+      ou: "OU=Workstations,DC=example,DC=com"
+      user: "join_user"
+      password: "secret_password"
+
+  # 4. Schedule Startup Tasks
+  - task.create:
+      name: "FinalizeSetup"
+      command: "C:\\Windows\\System32\\cmd.exe"
+      args: ["/c", "echo Setup Complete"]
+      trigger: "boot"
+
+  # 5. Finalize
+  - stage.set: "100"
+  - system.power:
+      type: reboot
+      delay: 10
+      reason: installation

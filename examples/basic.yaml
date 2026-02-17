@@ -1,0 +1,20 @@
+# Basic Glazier Go Configuration
+# Run with: .\glazier.exe -config_root_path .
+
+# Policy: Only run on Windows 10/11
+- policy:
+  - os_version:
+      min_version: "10.0"
+
+# Set the build stage
+- stage.set: "10"
+
+# Install a package (mock example)
+- googet.install:
+  - google-chrome-stable
+
+# Reboot the system
+- system.power:
+    type: reboot
+    delay: 30
+    reason: maintenance
