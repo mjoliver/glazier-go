@@ -1,6 +1,6 @@
 # Should PASS on Server 2022 (windows-latest)
 - policy:
     - os_version:
-        allowed_versions: ["Server 2022", "10", "11"]
+        allowed_versions: ["Server 2025", "Server 2022", "10", "11"]
 
 - stage.set: 1
