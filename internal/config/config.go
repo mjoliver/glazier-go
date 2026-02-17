@@ -75,28 +75,40 @@ func (r *Runner) Start(ctx context.Context, configURL string) error {
 }
 
 func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error {
-	// policyData can be a list of policy names
+	// policyData can be a list of policy names or policy maps
 	policies, ok := policyData.([]interface{})
 	if !ok {
 		return fmt.Errorf("policy must be a list")
 	}
 
 	for _, p := range policies {
-		policyName, ok := p.(string)
-		if !ok {
+		var policyName string
+		var policyConfig interface{}
+
+		switch v := p.(type) {
+		case string:
+			// Bare policy name: - os_version
+			policyName = v
+		case map[string]interface{}:
+			// Policy with config: - os_version: {version: "11"}
+			for k, val := range v {
+				policyName = k
+				policyConfig = val
+				break // Only one key per map entry
+			}
+		default:
 			log.Printf("Warning: invalid policy format: %v", p)
 			continue
 		}
 
 		log.Printf("Checking policy: %s", policyName)
 
-		// Create and check the policy
-		policy, err := policy.NewPolicy(policyName, nil)
+		pol, err := policy.NewPolicy(policyName, policyConfig)
 		if err != nil {
 			return fmt.Errorf("failed to create policy %s: %w", policyName, err)
 		}
 
-		if err := policy.Check(); err != nil {
+		if err := pol.Check(); err != nil {
 			return fmt.Errorf("policy check failed for %s: %w", policyName, err)
 		}
 
