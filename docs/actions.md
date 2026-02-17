@@ -71,6 +71,7 @@ Partitions a specific disk.
     disk_id: 0
     partition_id: 1
     label: "Data"
+    assign_letter: true
 ```
 
 ## Power (`system.power`)
