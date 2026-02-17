@@ -52,6 +52,12 @@ Glazier expects a configuration root. By default, it looks for `config.yaml` or 
 .\glazier.exe -config_root_path ./examples/basic.yaml
 ```
 
+## 📚 Documentation
+
+- **[Configuration Guide](docs/configuration.md)**: Learn how to structure your YAML files.
+- **[Action Reference](docs/actions.md)**: Full list of supported actions (`bitlocker`, `googet`, etc.) and their parameters.
+- **[Manual Testing](MANUAL_TESTING.md)**: How to verify the binary in a real environment.
+
 ## 🔮 Next Steps
 
 - [ ] **WinPE Integration**: Test the binary in a live WinPE boot environment.
