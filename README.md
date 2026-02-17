@@ -65,6 +65,9 @@ go build ./cmd/glazier
 Glazier expects a configuration root. By default, it looks for `config.yaml` or `build.yaml` (configurable).
 
 ```powershell
+# Validate config (Dry Run)
+.\glazier.exe -validate -config_root_path ./examples/basic.yaml
+
 # Run with local examples
 .\glazier.exe -config_root_path ./examples/basic.yaml
 ```

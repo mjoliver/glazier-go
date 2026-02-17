@@ -56,6 +56,17 @@ Since many Glazier actions (BitLocker, Domain Join, Power) interact directly wit
 - [ ] Logs show error during GooGet install.
 - [ ] **System DOES NOT reboot** (execution halts).
 
+### 4. Config Validation (Safe)
+**Goal**: Verify syntax and policy without execution.
+**Config**: `examples/basic.yaml`
+
+**Steps:**
+1.  Run: `.\glazier.exe -validate -config_root_path .\examples\basic.yaml`
+
+**Expected Outcome:**
+- [ ] Logs show "Validation successful!"
+- [ ] No actions are executed.
+
 ## Troubleshooting
 - **Logs**: Check console output. Redirect to file if needed: `.\glazier.exe ... > log.txt 2>&1`
 - **Permissions**: Ensure you are running as Administrator.
