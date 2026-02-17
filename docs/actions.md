@@ -118,3 +118,59 @@ Creates a scheduled task.
     args: ["/c", "echo done"]
     trigger: "boot"
 ```
+
+## File Copy (`file.copy`)
+Copies a file or directory.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `src` | string | Yes | Source path. |
+| `dst` | string | Yes | Destination path. |
+
+```yaml
+- file.copy:
+    src: C:\Config\settings.xml
+    dst: C:\Windows\settings.xml
+```
+
+## File Mkdir (`file.mkdir`)
+Creates a directory (including nested parents).
+
+```yaml
+- file.mkdir: C:\Glazier\Logs
+```
+
+## File Remove (`file.remove`)
+Removes a file or directory recursively.
+
+```yaml
+- file.remove: C:\Temp\old_installer
+```
+
+## File Unzip (`file.unzip`)
+Extracts a ZIP archive with zip-slip protection.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `src` | string | Yes | Path to ZIP file. |
+| `dst` | string | Yes | Extraction directory. |
+
+```yaml
+- file.unzip:
+    src: C:\Downloads\package.zip
+    dst: C:\Program Files\MyApp
+```
+
+## File Download (`file.download`)
+Downloads a file from a URL.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `url` | string | Yes | URL to download. |
+| `dst` | string | Yes | Local destination path. |
+
+```yaml
+- file.download:
+    url: https://example.com/installer.exe
+    dst: C:\Downloads\installer.exe
+```
