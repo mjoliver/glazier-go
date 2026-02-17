@@ -3,7 +3,6 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"gopkg.in/yaml.v3"
 )
@@ -44,5 +43,4 @@ func (a *Power) Validate() error {
 
 func init() {
 	Register("system.power", NewPower)
-	_ = log.Printf // ensure log is used
 }

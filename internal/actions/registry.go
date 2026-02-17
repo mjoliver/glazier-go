@@ -3,7 +3,6 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"gopkg.in/yaml.v3"
 )
@@ -87,5 +86,4 @@ func init() {
 	Register("registry.set", NewRegistrySet)
 	Register("registry.delete", NewRegistryDelete)
 	Register("registry.get", NewRegistryGet)
-	_ = log.Printf
 }

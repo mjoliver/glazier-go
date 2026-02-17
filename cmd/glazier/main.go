@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
 	"os"
 
+	"github.com/google/deck"
+	"github.com/google/deck/backends/logger"
 	"github.com/mjoliver/glazier-go/internal/config"
 	"github.com/mjoliver/glazier-go/internal/template"
 )
@@ -20,9 +21,11 @@ var (
 func main() {
 	flag.Parse()
 
-	// Initialize logging (using standard log for now, could switch to deck later)
-	log.SetOutput(os.Stdout)
-	log.Println("Starting Glazier Go...")
+	// Initialize deck logging with stdout backend
+	deck.Add(logger.Init(os.Stdout, 0))
+	defer deck.Close()
+
+	deck.Info("Starting Glazier Go...")
 
 	// Todo: Initialize BuildInfo
 	// Todo: Check WinPE status
@@ -31,20 +34,21 @@ func main() {
 
 	ctx := context.Background()
 	if err := run(ctx); err != nil {
-		log.Fatalf("Glazier failed: %v", err)
+		deck.Errorf("Glazier failed: %v", err)
+		os.Exit(1)
 	}
 }
 
 func run(ctx context.Context) error {
-	log.Printf("Config Root Path: %s", *configRootPath)
+	deck.Infof("Config Root Path: %s", *configRootPath)
 
 	// Initialize build info for templates
 	buildInfo, err := template.NewBuildInfo()
 	if err != nil {
-		log.Printf("Warning: failed to initialize build info: %v", err)
+		deck.Warningf("Failed to initialize build info: %v", err)
 		buildInfo = nil // Continue without template support
 	} else {
-		log.Printf("Build Info: Hostname=%s, Stage=%s", buildInfo.Hostname, buildInfo.Stage)
+		deck.Infof("Build Info: Hostname=%s, Stage=%s", buildInfo.Hostname, buildInfo.Stage)
 	}
 
 	// Create Config Runner

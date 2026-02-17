@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	"github.com/google/glazier/go/stages"
 	"gopkg.in/yaml.v3"
 )
@@ -33,7 +33,7 @@ func NewStageSet(ctx context.Context, yamlData interface{}) (Action, error) {
 }
 
 func (a *StageSet) Run(ctx context.Context) error {
-	log.Printf("Setting stage to: %s", a.ID)
+	deck.Infof("Setting stage to: %s", a.ID)
 	// Call existing library
 	return stages.SetStage(a.ID, stages.StartKey)
 }

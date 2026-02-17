@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	"github.com/google/glazier/go/googet"
 	"gopkg.in/yaml.v3"
 )
@@ -42,8 +42,8 @@ func NewGooGetInstall(ctx context.Context, yamlData interface{}) (Action, error)
 }
 
 func (a *GooGetInstall) Run(ctx context.Context) error {
-	log.Printf("Installing GooGet packages: %v", a.Config.Packages)
-	
+	deck.Infof("Installing GooGet packages: %v", a.Config.Packages)
+
 	for _, pkg := range a.Config.Packages {
 		// Call existing library
 		// Note: existing library accepts package, sources, reinstall, dbOnly, config

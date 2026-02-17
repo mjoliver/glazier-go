@@ -4,16 +4,16 @@ package actions
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/capnspacehook/taskmaster"
+	"github.com/google/deck"
 	"github.com/google/glazier/go/tasks"
 )
 
 func (a *Task) Run(ctx context.Context) error {
-	log.Printf("Creating scheduled task: %s", a.Config.Name)
+	deck.Infof("Creating scheduled task: %s", a.Config.Name)
 
 	// Determine trigger
 	var trigger taskmaster.Trigger

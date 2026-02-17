@@ -5,13 +5,13 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	glazierReg "github.com/google/glazier/go/registry"
 )
 
 func (a *RegistrySet) Run(ctx context.Context) error {
-	log.Printf("registry.set: %s\\%s = %v (type: %s)", a.Config.Path, a.Config.Name, a.Config.Value, a.Config.Type)
+	deck.Infof("registry.set: %s\\%s = %v (type: %s)", a.Config.Path, a.Config.Name, a.Config.Value, a.Config.Type)
 
 	// Ensure key exists
 	if err := glazierReg.Create(a.Config.Path); err != nil {
@@ -53,12 +53,12 @@ func (a *RegistrySet) Run(ctx context.Context) error {
 }
 
 func (a *RegistryDelete) Run(ctx context.Context) error {
-	log.Printf("registry.delete: %s\\%s", a.Config.Path, a.Config.Name)
+	deck.Infof("registry.delete: %s\\%s", a.Config.Path, a.Config.Name)
 	return glazierReg.Delete(a.Config.Path, a.Config.Name)
 }
 
 func (a *RegistryGet) Run(ctx context.Context) error {
-	log.Printf("registry.get: %s\\%s", a.Config.Path, a.Config.Name)
+	deck.Infof("registry.get: %s\\%s", a.Config.Path, a.Config.Name)
 
 	val, err := glazierReg.GetString(a.Config.Path, a.Config.Name)
 	if err != nil {
@@ -66,6 +66,6 @@ func (a *RegistryGet) Run(ctx context.Context) error {
 	}
 
 	a.Result = val
-	log.Printf("registry.get: %s = %q", a.Config.Name, val)
+	deck.Infof("registry.get: %s = %q", a.Config.Name, val)
 	return nil
 }

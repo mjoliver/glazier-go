@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	"github.com/google/glazier/go/bitlocker"
 	"gopkg.in/yaml.v3"
 )
@@ -31,15 +31,15 @@ func NewBitLockerEnable(ctx context.Context, yamlData interface{}) (Action, erro
 }
 
 func (a *BitLockerEnable) Run(ctx context.Context) error {
-	log.Printf(" enabling BitLocker with mode: %s, backup: %v", a.Config.Mode, a.Config.Backup)
-	
+	deck.Infof("Enabling BitLocker with mode: %s, backup: %v", a.Config.Mode, a.Config.Backup)
+
 	// Example call to existing library
 	if a.Config.Backup {
 		if err := bitlocker.BackupToAD(); err != nil {
 			return fmt.Errorf("failed to backup to AD: %w", err)
 		}
 	}
-	
+
 	// Note: Actual encryption logic would call other bitlocker package methods here
 	// For now, mirroring the Python logic which calls similar helpers
 	return nil

@@ -3,8 +3,8 @@ package config
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	"gopkg.in/yaml.v3"
 
 	"github.com/mjoliver/glazier-go/internal/actions"
@@ -40,7 +40,7 @@ func (r *Runner) Start(ctx context.Context, configURL string) error {
 	}
 
 	for i, task := range r.tasks {
-		log.Printf("Executing task %d/%d", i+1, len(r.tasks))
+		deck.Infof("Executing task %d/%d", i+1, len(r.tasks))
 
 		for key, val := range task {
 			if key == "policy" {
@@ -97,11 +97,11 @@ func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error 
 				break // Only one key per map entry
 			}
 		default:
-			log.Printf("Warning: invalid policy format: %v", p)
+			deck.Warningf("Invalid policy format: %v", p)
 			continue
 		}
 
-		log.Printf("Checking policy: %s", policyName)
+		deck.Infof("Checking policy: %s", policyName)
 
 		pol, err := policy.NewPolicy(policyName, policyConfig)
 		if err != nil {
@@ -112,7 +112,7 @@ func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error 
 			return fmt.Errorf("policy check failed for %s: %w", policyName, err)
 		}
 
-		log.Printf("Policy %s passed", policyName)
+		deck.Infof("Policy %s passed", policyName)
 	}
 
 	return nil

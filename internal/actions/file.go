@@ -5,13 +5,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/google/deck"
 	"gopkg.in/yaml.v3"
 )
 
@@ -42,7 +42,7 @@ func (a *FileCopy) Validate() error {
 }
 
 func (a *FileCopy) Run(ctx context.Context) error {
-	log.Printf("file.copy: %s -> %s", a.Config.Src, a.Config.Dst)
+	deck.Infof("file.copy: %s -> %s", a.Config.Src, a.Config.Dst)
 
 	info, err := os.Stat(a.Config.Src)
 	if err != nil {
@@ -124,7 +124,7 @@ func (a *FileMkdir) Validate() error {
 }
 
 func (a *FileMkdir) Run(ctx context.Context) error {
-	log.Printf("file.mkdir: %s", a.Config.Path)
+	deck.Infof("file.mkdir: %s", a.Config.Path)
 	return os.MkdirAll(a.Config.Path, 0755)
 }
 
@@ -157,7 +157,7 @@ func (a *FileRemove) Validate() error {
 }
 
 func (a *FileRemove) Run(ctx context.Context) error {
-	log.Printf("file.remove: %s", a.Config.Path)
+	deck.Infof("file.remove: %s", a.Config.Path)
 	return os.RemoveAll(a.Config.Path)
 }
 
@@ -187,7 +187,7 @@ func (a *FileUnzip) Validate() error {
 }
 
 func (a *FileUnzip) Run(ctx context.Context) error {
-	log.Printf("file.unzip: %s -> %s", a.Config.Src, a.Config.Dst)
+	deck.Infof("file.unzip: %s -> %s", a.Config.Src, a.Config.Dst)
 
 	r, err := zip.OpenReader(a.Config.Src)
 	if err != nil {
@@ -260,7 +260,7 @@ func (a *FileDownload) Validate() error {
 }
 
 func (a *FileDownload) Run(ctx context.Context) error {
-	log.Printf("file.download: %s -> %s", a.Config.URL, a.Config.Dst)
+	deck.Infof("file.download: %s -> %s", a.Config.URL, a.Config.Dst)
 
 	client := &http.Client{Timeout: 5 * time.Minute}
 	req, err := http.NewRequestWithContext(ctx, "GET", a.Config.URL, nil)

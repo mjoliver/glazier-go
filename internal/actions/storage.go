@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	// "github.com/google/glazier/go/storage"
 	"gopkg.in/yaml.v3"
 )
@@ -33,7 +33,7 @@ type Partition struct {
 }
 
 func (a *Partition) Run(ctx context.Context) error {
-	log.Printf("Partitioning disk %d, part %d", a.Config.DiskID, a.Config.PartitionID)
+	deck.Infof("Partitioning disk %d, part %d", a.Config.DiskID, a.Config.PartitionID)
 
 	// Example call to existing library
 	// d := storage.Disk{Number: a.Config.DiskID}

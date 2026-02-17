@@ -5,13 +5,13 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/google/deck"
 	"github.com/google/glazier/go/power"
 )
 
 func (a *Power) Run(ctx context.Context) error {
-	log.Printf("Executing power action: %s", a.Config.Type)
+	deck.Infof("Executing power action: %s", a.Config.Type)
 
 	reason := power.SHTDN_REASON_MAJOR_NONE
 	switch a.Config.Reason {
