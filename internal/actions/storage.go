@@ -9,11 +9,34 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// function hooks for mocking
+var (
+	diskClear = func(d *storage.Disk, removeData, removeOEM, zeroDisk bool) (storage.ExtendedStatus, error) {
+		return d.Clear(removeData, removeOEM, zeroDisk)
+	}
+	getDisks = func(svc storage.Service, filter string) (storage.DiskSet, error) {
+		return svc.GetDisks(filter)
+	}
+	storageConnect = func() (storage.Service, error) {
+		return storage.Connect()
+	}
+	closeService = func(s *storage.Service) {
+		s.Close()
+	}
+)
+
 type PartitionConfig struct {
 	DiskID       int    `yaml:"disk_id"`
 	PartitionID  int    `yaml:"partition_id"`
 	Label        string `yaml:"label"`
 	AssignLetter bool   `yaml:"assign_letter"`
+}
+
+type DiskWipeConfig struct {
+	DiskID     int  `yaml:"disk_id"`
+	RemoveData bool `yaml:"remove_data"`
+	RemoveOEM  bool `yaml:"remove_oem"`
+	ZeroDisk   bool `yaml:"zero_disk"`
 }
 
 func NewPartition(ctx context.Context, yamlData interface{}) (Action, error) {
@@ -26,6 +49,22 @@ func NewPartition(ctx context.Context, yamlData interface{}) (Action, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 	return &Partition{Config: cfg}, nil
+}
+
+func NewDiskWipe(ctx context.Context, yamlData interface{}) (Action, error) {
+	var cfg DiskWipeConfig
+	// Set defaults: remove_data=true, remove_oem=true, zero_disk=false
+	cfg.RemoveData = true
+	cfg.RemoveOEM = true
+
+	data, err := yaml.Marshal(yamlData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+	return &DiskWipe{Config: cfg}, nil
 }
 
 type Partition struct {
@@ -93,4 +132,49 @@ func (a *Partition) Validate() error {
 
 func init() {
 	Register("partition.disk", NewPartition)
+	Register("disk.wipe", NewDiskWipe)
+}
+
+type DiskWipe struct {
+	Config DiskWipeConfig
+}
+
+func (a *DiskWipe) Run(ctx context.Context) error {
+	deck.Infof("Wiping disk %d (data: %v, oem: %v, zero: %v)", a.Config.DiskID, a.Config.RemoveData, a.Config.RemoveOEM, a.Config.ZeroDisk)
+
+	svc, err := storageConnect()
+	if err != nil {
+		return fmt.Errorf("storage.Connect: %w", err)
+	}
+	defer closeService(&svc)
+
+	// Find the specific disk
+	filter := fmt.Sprintf("WHERE Number=%d", a.Config.DiskID)
+	diskSet, err := getDisks(svc, filter)
+	if err != nil {
+		return fmt.Errorf("GetDisks(%s): %w", filter, err)
+	}
+	defer diskSet.Close()
+
+	if len(diskSet.Disks) == 0 {
+		return fmt.Errorf("disk %d not found", a.Config.DiskID)
+	}
+	disk := diskSet.Disks[0]
+
+	// Perform Wipe using the mockable function
+	deck.Warningf("Executing Disk Wipe on Disk %d. This is destructive.", a.Config.DiskID)
+	_, err = diskClear(&disk, a.Config.RemoveData, a.Config.RemoveOEM, a.Config.ZeroDisk)
+	if err != nil {
+		return fmt.Errorf("Disk.Clear failed: %w", err)
+	}
+
+	deck.Infof("Disk %d wiped successfully", a.Config.DiskID)
+	return nil
+}
+
+func (a *DiskWipe) Validate() error {
+	if a.Config.DiskID < 0 {
+		return fmt.Errorf("disk_id must be non-negative")
+	}
+	return nil
 }

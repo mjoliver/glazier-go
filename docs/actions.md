@@ -16,6 +16,24 @@ Enables BitLocker encryption on the system drive.
     backup: true
 ```
 
+## Disk Wipe (`disk.wipe`)
+Wipes all partitions and data from a disk. **Destructive Action.**
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `disk_id` | int | Yes | The disk number (e.g., 0). |
+| `remove_data` | bool | No | Remove data (default: `true`). |
+| `remove_oem` | bool | No | Remove OEM partitions (default: `true`). |
+| `zero_disk` | bool | No | Zero out the disk (default: `false`). |
+
+```yaml
+- disk.wipe:
+    disk_id: 0
+    remove_data: true
+    remove_oem: true
+    zero_disk: false
+```
+
 ## Domain Join (`domain.join`)
 Joins the machine to a Windows Domain.
 
