@@ -63,4 +63,24 @@ Config files support Go `text/template` syntax for dynamic values. See [Template
     packages:
       - base-{{.Hostname}}
       - image-{{.ImageID}}
+
+## Error Handling & Retries
+
+Any action can be configured with automatic retries and error handling behavior.
+
+### `retries` (int)
+Number of times to retry a failed action. Retries use exponential backoff (1s, 2s, 4s...). Default is `0`.
+
+### `on_error` (string)
+Behavior when an action fails (after all retries).
+- `fail` (default): Stop execution and exit with error.
+- `continue`: Log a warning and proceed to the next task.
+
+```yaml
+- file.download:
+    url: https://example.com/installer.exe
+    dst: C:\installer.exe
+    retries: 3           # Retry up to 3 times (total 4 attempts)
+    on_error: continue   # If it still fails, log warning and continue
+```
 ```

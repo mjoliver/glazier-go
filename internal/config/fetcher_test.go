@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -117,7 +118,7 @@ func TestFetcher_fetchRemote_MaxRetriesExceeded(t *testing.T) {
 		t.Errorf("fetchRemote() made %d attempts, want 3", attempts)
 	}
 
-	if !contains(err.Error(), "bad status code") {
+	if !strings.Contains(err.Error(), "bad status code") {
 		t.Errorf("fetchRemote() error = %v, want error containing 'bad status code'", err)
 	}
 }
@@ -140,7 +141,7 @@ func TestFetcher_fetchRemote_ContextCanceled(t *testing.T) {
 		t.Fatal("fetchRemote() expected error from context cancellation, got nil")
 	}
 
-	if !errors.Is(err, context.DeadlineExceeded) && !contains(err.Error(), "context") {
+	if !errors.Is(err, context.DeadlineExceeded) && !strings.Contains(err.Error(), "context") {
 		t.Errorf("fetchRemote() error = %v, want context cancellation error", err)
 	}
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/deck"
 	"gopkg.in/yaml.v3"
@@ -51,6 +52,9 @@ func (r *Runner) Start(ctx context.Context, configURL string) error {
 				continue
 			}
 
+			// Extract retry/error config before passing to factory
+			retries, onError := extractRunOpts(val)
+
 			// Handle action
 			factory, ok := actions.Registry[key]
 			if !ok {
@@ -66,12 +70,66 @@ func (r *Runner) Start(ctx context.Context, configURL string) error {
 				return fmt.Errorf("action %s validation failed: %w", key, err)
 			}
 
-			if err := action.Run(ctx); err != nil {
+			if err := runWithRetry(ctx, key, action, retries); err != nil {
+				if onError == "continue" {
+					deck.Warningf("Action %s failed (continuing): %v", key, err)
+					continue
+				}
 				return fmt.Errorf("action %s execution failed: %w", key, err)
 			}
 		}
 	}
 	return nil
+}
+
+// extractRunOpts pulls retries and on_error from action config if present.
+func extractRunOpts(val interface{}) (int, string) {
+	m, ok := val.(map[string]interface{})
+	if !ok {
+		return 0, ""
+	}
+	retries := 0
+	if r, ok := m["retries"]; ok {
+		switch v := r.(type) {
+		case int:
+			retries = v
+		case float64:
+			retries = int(v)
+		}
+	}
+	onError := ""
+	if e, ok := m["on_error"]; ok {
+		if s, ok := e.(string); ok {
+			onError = s
+		}
+	}
+	return retries, onError
+}
+
+// runWithRetry executes an action with exponential backoff retries.
+func runWithRetry(ctx context.Context, name string, action actions.Action, retries int) error {
+	var lastErr error
+	attempts := retries + 1 // retries=0 means 1 attempt
+
+	for attempt := 1; attempt <= attempts; attempt++ {
+		lastErr = action.Run(ctx)
+		if lastErr == nil {
+			return nil
+		}
+
+		if attempt < attempts {
+			backoff := time.Duration(1<<uint(attempt-1)) * time.Second // 1s, 2s, 4s, 8s...
+			deck.Warningf("Action %s attempt %d/%d failed: %v (retrying in %v)", name, attempt, attempts, lastErr, backoff)
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+	}
+
+	return lastErr
 }
 
 func (r *Runner) checkPolicy(ctx context.Context, policyData interface{}) error {
