@@ -3,10 +3,13 @@ package actions
 import (
 	"archive/zip"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -181,6 +184,64 @@ func TestFileDownload_Run(t *testing.T) {
 	if string(data) != "downloaded content" {
 		t.Errorf("downloaded = %q, want %q", string(data), "downloaded content")
 	}
+}
+
+func TestFileDownload_Run_Checksum(t *testing.T) {
+	content := []byte("secure content")
+	// Calculate hash dynamically to avoid mismatch issues
+	h := sha256.New()
+	h.Write(content)
+	validSum := hex.EncodeToString(h.Sum(nil))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(content)
+	}))
+	defer server.Close()
+
+	t.Run("valid checksum", func(t *testing.T) {
+		tmp := t.TempDir()
+		dst := filepath.Join(tmp, "good.txt")
+		a := &FileDownload{Config: FileDownloadConfig{
+			URL:    server.URL,
+			Dst:    dst,
+			SHA256: validSum,
+		}}
+		if err := a.Run(context.Background()); err != nil {
+			t.Errorf("Run() unexpected error: %v", err)
+		}
+		if _, err := os.Stat(dst); os.IsNotExist(err) {
+			t.Error("file should exist")
+		}
+	})
+
+	t.Run("invalid checksum", func(t *testing.T) {
+		tmp := t.TempDir()
+		dst := filepath.Join(tmp, "bad.txt")
+		a := &FileDownload{Config: FileDownloadConfig{
+			URL:    server.URL,
+			Dst:    dst,
+			SHA256: "badbadbad",
+		}}
+		if err := a.Run(context.Background()); err == nil {
+			t.Error("Run() expected error, got nil")
+		}
+		if _, err := os.Stat(dst); !os.IsNotExist(err) {
+			t.Error("file should have been deleted (security cleanup)")
+		}
+	})
+
+	t.Run("uppercase checksum", func(t *testing.T) {
+		tmp := t.TempDir()
+		dst := filepath.Join(tmp, "upper.txt")
+		a := &FileDownload{Config: FileDownloadConfig{
+			URL:    server.URL,
+			Dst:    dst,
+			SHA256: strings.ToUpper(validSum),
+		}}
+		if err := a.Run(context.Background()); err != nil {
+			t.Errorf("Run() unexpected error: %v", err)
+		}
+	})
 }
 
 func TestFileDownload_Validate(t *testing.T) {

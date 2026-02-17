@@ -3,6 +3,8 @@ package actions
 import (
 	"archive/zip"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -237,8 +239,9 @@ func (a *FileUnzip) Run(ctx context.Context) error {
 // --- file.download ---
 
 type FileDownloadConfig struct {
-	URL string `yaml:"url"`
-	Dst string `yaml:"dst"`
+	URL    string `yaml:"url"`
+	Dst    string `yaml:"dst"`
+	SHA256 string `yaml:"sha256"` // Optional checksum
 }
 
 type FileDownload struct{ Config FileDownloadConfig }
@@ -260,7 +263,7 @@ func (a *FileDownload) Validate() error {
 }
 
 func (a *FileDownload) Run(ctx context.Context) error {
-	deck.Infof("file.download: %s -> %s", a.Config.URL, a.Config.Dst)
+	deck.Infof("file.download: %s -> %s (sha256: %s)", a.Config.URL, a.Config.Dst, a.Config.SHA256)
 
 	client := &http.Client{Timeout: 5 * time.Minute}
 	req, err := http.NewRequestWithContext(ctx, "GET", a.Config.URL, nil)
@@ -290,7 +293,40 @@ func (a *FileDownload) Run(ctx context.Context) error {
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
-	return err
+	if err != nil {
+		return err
+	}
+	out.Close() // Close before verifying
+
+	// Verify Checksum if provided
+	if a.Config.SHA256 != "" {
+		if err := verifyChecksum(a.Config.Dst, a.Config.SHA256); err != nil {
+			os.Remove(a.Config.Dst) // Security: clean up bad file
+			return fmt.Errorf("file.download: checksum verification failed: %w", err)
+		}
+		deck.Infof("file.download: checksum verified for %s", a.Config.Dst)
+	}
+
+	return nil
+}
+
+func verifyChecksum(path, expected string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return err
+	}
+
+	actual := hex.EncodeToString(h.Sum(nil))
+	if !strings.EqualFold(actual, expected) {
+		return fmt.Errorf("expected %s, got %s", expected, actual)
+	}
+	return nil
 }
 
 // --- Register all file actions ---

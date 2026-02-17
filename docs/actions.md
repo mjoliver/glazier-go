@@ -168,11 +168,13 @@ Downloads a file from a URL.
 | :--- | :--- | :--- | :--- |
 | `url` | string | Yes | URL to download. |
 | `dst` | string | Yes | Local destination path. |
+| `sha256` | string | No | Expected SHA256 checksum (case-insensitive). |
 
 ```yaml
 - file.download:
     url: https://example.com/installer.exe
     dst: C:\Downloads\installer.exe
+    sha256: 5c039bd752674e797585db5868e82a991316b17676778f6412089d7b971a815a
 ```
 
 ## Registry Set (`registry.set`)
