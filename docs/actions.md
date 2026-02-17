@@ -174,3 +174,54 @@ Downloads a file from a URL.
     url: https://example.com/installer.exe
     dst: C:\Downloads\installer.exe
 ```
+
+## Registry Set (`registry.set`)
+Sets a registry value in HKLM. Uses the upstream `go/registry` library.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `path` | string | Yes | Registry key path (e.g. `SOFTWARE\Glazier`). |
+| `name` | string | Yes | Value name. |
+| `value` | any | Yes | Value to set. |
+| `type` | string | No | `string` (default), `dword`, `multi_string`, `binary`. |
+
+```yaml
+- registry.set:
+    path: SOFTWARE\Glazier
+    name: BuildVersion
+    value: "1.0"
+
+- registry.set:
+    path: SOFTWARE\Glazier
+    name: BuildStage
+    value: 100
+    type: dword
+```
+
+## Registry Delete (`registry.delete`)
+Deletes a registry value from HKLM.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `path` | string | Yes | Registry key path. |
+| `name` | string | Yes | Value name to delete. |
+
+```yaml
+- registry.delete:
+    path: SOFTWARE\Glazier
+    name: TempValue
+```
+
+## Registry Get (`registry.get`)
+Reads a string registry value from HKLM.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `path` | string | Yes | Registry key path. |
+| `name` | string | Yes | Value name to read. |
+
+```yaml
+- registry.get:
+    path: SOFTWARE\Glazier
+    name: BuildVersion
+```
