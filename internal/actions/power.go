@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/google/glazier/go/power"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,28 +35,6 @@ type Power struct {
 	Config PowerConfig
 }
 
-func (a *Power) Run(ctx context.Context) error {
-	log.Printf("Executing power action: %s", a.Config.Type)
-
-	reason := power.SHTDN_REASON_MAJOR_NONE
-	switch a.Config.Reason {
-	case "maintenance":
-		reason = power.SHTDN_REASON_MINOR_MAINTENANCE
-	case "installation":
-		reason = power.SHTDN_REASON_MINOR_INSTALLATION
-	case "upgrade":
-		reason = power.SHTDN_REASON_MINOR_UPGRADE
-	}
-
-	if a.Config.Type == "reboot" {
-		return power.Reboot(reason, a.Config.Force)
-	} else if a.Config.Type == "shutdown" {
-		return power.Shutdown(reason, a.Config.Force)
-	}
-
-	return fmt.Errorf("unknown power type: %s", a.Config.Type)
-}
-
 func (a *Power) Validate() error {
 	if a.Config.Type != "reboot" && a.Config.Type != "shutdown" {
 		return fmt.Errorf("invalid power type: %s", a.Config.Type)
@@ -67,4 +44,5 @@ func (a *Power) Validate() error {
 
 func init() {
 	Register("system.power", NewPower)
+	_ = log.Printf // ensure log is used
 }

@@ -3,9 +3,7 @@ package actions
 import (
 	"context"
 	"fmt"
-	"log"
 
-	join "github.com/google/glazier/go/domain"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,13 +28,6 @@ func NewDomainJoin(ctx context.Context, yamlData interface{}) (Action, error) {
 
 type DomainJoin struct {
 	Config DomainJoinConfig
-}
-
-func (a *DomainJoin) Run(ctx context.Context) error {
-	log.Printf("Joining domain: %s (OU: %s)", a.Config.Domain, a.Config.OU)
-
-	// Call library
-	return join.Domain(a.Config.Domain, a.Config.OU, a.Config.User, a.Config.Password, join.JoinDomainFlag)
 }
 
 func (a *DomainJoin) Validate() error {

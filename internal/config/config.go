@@ -7,8 +7,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/google/glazier/internal/actions"
-	"github.com/google/glazier/internal/policy"
+	"github.com/mjoliver/glazier-go/internal/actions"
+	"github.com/mjoliver/glazier-go/internal/policy"
 )
 
 // TaskList represents the top-level YAML structure of a Glazier config.

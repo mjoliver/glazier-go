@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/glazier/internal/actions"
+	"github.com/mjoliver/glazier-go/internal/actions"
 )
 
 func TestRunner_checkPolicy(t *testing.T) {

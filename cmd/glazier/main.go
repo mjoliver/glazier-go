@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/glazier/internal/config"
-	"github.com/google/glazier/internal/template"
+	"github.com/mjoliver/glazier-go/internal/config"
+	"github.com/mjoliver/glazier-go/internal/template"
 )
 
 var (

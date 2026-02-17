@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/glazier/internal/template"
+	"github.com/mjoliver/glazier-go/internal/template"
 )
 
 // FetcherInterface allows mocking in tests.
