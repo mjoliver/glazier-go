@@ -1,0 +1,28 @@
+# Template Example Configuration
+# Demonstrates Go text/template variable substitution.
+#
+# Available variables:
+#   {{.Hostname}}  - Machine hostname
+#   {{.Stage}}     - Current build stage (from GLAZIER_STAGE env var)
+#   {{.Timestamp}} - Current timestamp
+#   {{.ImageID}}   - Image ID (from IMAGE_ID env var)
+#   {{.Username}}  - Current username
+#
+# Run with:
+#   set IMAGE_ID=win11-v2
+#   .\glazier.exe -config_root_path .\examples\template_example.yaml
+
+- stage.set: "10"
+
+- googet.install:
+    packages:
+      - base-image-{{.ImageID}}
+      - config-{{.Hostname}}
+
+{{if .ImageID}}
+- bitlocker.enable:
+    mode: tpm
+    backup: true
+{{end}}
+
+- stage.set: "100"

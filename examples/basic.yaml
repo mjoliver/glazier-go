@@ -1,17 +1,21 @@
 # Basic Glazier Go Configuration
-# Run with: .\glazier.exe -config_root_path .
+# Demonstrates simple actions with template variables.
+#
+# Run with:
+#   set IMAGE_ID=win11-v2
+#   .\glazier.exe -config_root_path .\examples\basic.yaml
 
-# Policy: Only run on Windows 10/11
+# Policy: Only run on Windows
 - policy:
-  - os_version:
-      min_version: "10.0"
+  - os_version
 
 # Set the build stage
 - stage.set: "10"
 
-# Install a package (mock example)
+# Install packages (with hostname-based config)
 - googet.install:
   - google-chrome-stable
+  - config-{{.Hostname}}
 
 # Reboot the system
 - system.power:

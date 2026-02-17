@@ -8,32 +8,42 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/glazier/internal/template"
 )
 
-// Fetcher retrieves configuration data from a source.
+// FetcherInterface allows mocking in tests.
 type FetcherInterface interface {
-	Fetch(ctx context.Context, path string) ([]byte, error)
+	Fetch(ctx context.Context, url string) ([]byte, error)
 }
 
-// Fetcher retrieves configuration data from a source (HTTP/HTTPS or local file).
+// Fetcher retrieves configuration files.
 type Fetcher struct {
-	Client *http.Client
+	buildInfo *template.BuildInfo
 }
 
-func NewFetcher() *Fetcher {
-	return &Fetcher{
-		Client: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
+// NewFetcher creates a new Fetcher with optional template support.
+func NewFetcher(buildInfo *template.BuildInfo) *Fetcher {
+	return &Fetcher{buildInfo: buildInfo}
 }
 
 // Fetch retrieves the content at the given path/URL.
 func (f *Fetcher) Fetch(ctx context.Context, path string) ([]byte, error) {
+	var data []byte
+	var err error
+
 	if strings.HasPrefix(path, "http") {
-		return f.fetchRemote(ctx, path)
+		data, err = f.fetchRemote(ctx, path)
+	} else {
+		data, err = f.fetchLocal(path)
 	}
-	return f.fetchLocal(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply template processing if BuildInfo is available
+	return template.Process(data, f.buildInfo)
 }
 
 func (f *Fetcher) fetchLocal(path string) ([]byte, error) {
@@ -47,6 +57,7 @@ func (f *Fetcher) fetchRemote(ctx context.Context, url string) ([]byte, error) {
 	// Exponential backoff configuration
 	maxRetries := 3
 	baseDelay := 1 * time.Second
+	client := &http.Client{Timeout: 30 * time.Second}
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -54,7 +65,7 @@ func (f *Fetcher) fetchRemote(ctx context.Context, url string) ([]byte, error) {
 			return nil, fmt.Errorf("failed to create request: %w", err)
 		}
 
-		resp, err := f.Client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			lastErr = err
 			if attempt < maxRetries-1 {

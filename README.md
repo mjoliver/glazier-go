@@ -56,6 +56,7 @@ Glazier expects a configuration root. By default, it looks for `config.yaml` or 
 
 - **[Configuration Guide](docs/configuration.md)**: Learn how to structure your YAML files.
 - **[Action Reference](docs/actions.md)**: Full list of supported actions (`bitlocker`, `googet`, etc.) and their parameters.
+- **[Templates](docs/templates.md)**: Dynamic variable substitution using Go templates.
 - **[Manual Testing](MANUAL_TESTING.md)**: How to verify the binary in a real environment.
 
 ## 🔮 Next Steps

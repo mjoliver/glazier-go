@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/google/glazier/internal/config"
+	"github.com/google/glazier/internal/template"
 )
 
 var (
@@ -37,8 +38,17 @@ func main() {
 func run(ctx context.Context) error {
 	log.Printf("Config Root Path: %s", *configRootPath)
 
+	// Initialize build info for templates
+	buildInfo, err := template.NewBuildInfo()
+	if err != nil {
+		log.Printf("Warning: failed to initialize build info: %v", err)
+		buildInfo = nil // Continue without template support
+	} else {
+		log.Printf("Build Info: Hostname=%s, Stage=%s", buildInfo.Hostname, buildInfo.Stage)
+	}
+
 	// Create Config Runner
-	fetcher := config.NewFetcher()
+	fetcher := config.NewFetcher(buildInfo)
 	runner := config.NewRunner(fetcher)
 
 	// Execute

@@ -1,5 +1,10 @@
 # Full Imaging Workflow Example
-# Run with: .\glazier.exe -config_root_path .
+# Demonstrates all actions with template variables and conditionals.
+#
+# Run with:
+#   set IMAGE_ID=win11-v2
+#   set GLAZIER_STAGE=0
+#   .\glazier.exe -config_root_path .\examples\full.yaml
 
 controls:
   - policy: ["os_version", "device_model"]
@@ -7,16 +12,20 @@ controls:
 tasks:
   # 1. Prepare Storage & Encryption
   - stage.set: "10"
+
+  {{if .ImageID}}
   - bitlocker.enable:
       mode: tpm
       backup: true
+  {{end}}
 
-  # 2. Install Core Software
+  # 2. Install Core Software (image-specific packages)
   - stage.set: "50"
   - googet.install:
       packages:
+        - base-image-{{.ImageID}}
+        - config-{{.Hostname}}
         - google-chrome-stable
-        - vlc-media-player
         - 7zip
       reinstall: true
       db_only: false
@@ -24,15 +33,15 @@ tasks:
   # 3. Join Domain
   - domain.join:
       domain: "example.com"
-      ou: "OU=Workstations,DC=example,DC=com"
+      ou: "OU=Workstations,OU={{.Username}},DC=example,DC=com"
       user: "join_user"
       password: "secret_password"
 
   # 4. Schedule Startup Tasks
   - task.create:
-      name: "FinalizeSetup"
+      name: "FinalizeSetup-{{.Hostname}}"
       command: "C:\\Windows\\System32\\cmd.exe"
-      args: ["/c", "echo Setup Complete"]
+      args: ["/c", "echo Setup Complete for {{.Hostname}} at {{.Timestamp}}"]
       trigger: "boot"
 
   # 5. Finalize

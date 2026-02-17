@@ -46,3 +46,14 @@ To run Glazier with a specific config file:
 ```powershell
 .\glazier.exe -config_root_path path/to/config.yaml
 ```
+
+## Templates
+
+Config files support Go `text/template` syntax for dynamic values. See [Templates Reference](templates.md) for full details.
+
+```yaml
+- googet.install:
+    packages:
+      - base-{{.Hostname}}
+      - image-{{.ImageID}}
+```

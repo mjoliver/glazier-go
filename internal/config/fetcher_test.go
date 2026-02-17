@@ -17,7 +17,7 @@ func TestFetcher_Fetch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	data, err := f.Fetch(context.Background(), server.URL)
 
 	if err != nil {
@@ -37,7 +37,7 @@ func TestFetcher_fetchRemote_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	data, err := f.fetchRemote(context.Background(), server.URL)
 
 	if err != nil {
@@ -68,7 +68,7 @@ func TestFetcher_fetchRemote_Retry(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	start := time.Now()
 	data, err := f.fetchRemote(context.Background(), server.URL)
 	elapsed := time.Since(start)
@@ -106,7 +106,7 @@ func TestFetcher_fetchRemote_MaxRetriesExceeded(t *testing.T) {
 	}))
 	defer server.Close()
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	_, err := f.fetchRemote(context.Background(), server.URL)
 
 	if err == nil {
@@ -133,7 +133,7 @@ func TestFetcher_fetchRemote_ContextCanceled(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	_, err := f.fetchRemote(ctx, server.URL)
 
 	if err == nil {
