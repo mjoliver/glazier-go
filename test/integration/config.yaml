@@ -2,10 +2,10 @@
 # This config is used by CI to verify end-to-end execution.
 # It performs safe, reversible operations on the Windows runner.
 
-# 0. Policy check — verify we're on Windows 11
+# 0. Policy check — verify Windows version
 - policy:
     - os_version:
-        version: "11"
+        allowed_versions: ["11", "Server 2025"]
 
 # 1. Create a test directory
 - file.mkdir: C:\GlazierTest\integration
